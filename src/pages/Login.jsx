@@ -1,20 +1,50 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Github } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { ClipLoader } from 'react-spinners';
 import PageHeader from '../components/layout/PageHeader';
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
+    const { login } = useAuth();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Mock authentication
-        localStorage.setItem('Patil Institute_user', JSON.stringify({ email, name: 'John Doe' }));
-        navigate('/');
+        setLoading(true);
+        setError('');
+        
+        try {
+            // Login and get response
+            const loginResponse = await login({ email, password });
+            
+            // Check if user came from a protected route
+            const from = location.state?.from?.pathname || '/';
+            const isAdminUser = loginResponse.user && loginResponse.user.role === 'admin';
+            
+            // Redirect to admin dashboard if admin, otherwise to home
+            if (isAdminUser) {
+                navigate('/admin', { replace: true });
+            } else {
+                navigate(from, { replace: true });
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            if (err.message === 'Invalid login response format') {
+                setError('Login service configuration error. Please contact support.');
+            } else {
+                setError(err.message || 'Login failed. Please check your credentials.');
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -55,6 +85,12 @@ const Login = () => {
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
+                            {error && (
+                                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                                    {error}
+                                </div>
+                            )}
+                            
                             <div className="relative">
                                 <label className="block text-[14px] font-bold text-[#162726] mb-3 uppercase tracking-wider">Email Address*</label>
                                 <div className="relative">
@@ -80,6 +116,7 @@ const Login = () => {
                                         className="w-full h-16 px-6 rounded-full bg-[#F2F4F7] border-none focus:ring-2 focus:ring-[#07A698] transition-all outline-none text-[#162726]"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
+                                        disabled={loading}
                                     />
                                     <button
                                         type="button"
@@ -101,10 +138,17 @@ const Login = () => {
 
                             <button
                                 type="submit"
-                                className="w-full h-16 bg-[#07A698] hover:bg-[#162726] text-white rounded-full font-bold text-[16px] transition-all duration-300 shadow-lg shadow-[#07A698]/20 flex items-center justify-center gap-2 group"
+                                disabled={loading}
+                                className="w-full h-16 bg-[#07A698] hover:bg-[#162726] text-white rounded-full font-bold text-[16px] transition-all duration-300 shadow-lg shadow-[#07A698]/20 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Login Now
-                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                {loading ? (
+                                    <ClipLoader color="#ffffff" size={20} />
+                                ) : (
+                                    <>
+                                        Login Now
+                                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </>
+                                )}
                             </button>
                         </form>
 

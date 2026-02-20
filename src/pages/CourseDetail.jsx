@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { courses } from '../data/courses';
+import { ClipLoader } from 'react-spinners';
+import courseService from '../services/courseService';
 import CourseHero from '../components/courseDetail/CourseHero';
 import PurchaseCard from '../components/courseDetail/PurchaseCard';
 import WhatYouLearn from '../components/courseDetail/WhatYouLearn';
@@ -12,10 +13,49 @@ import FAQSection from '../components/courseDetail/FAQSection';
 
 const CourseDetail = () => {
   const { id } = useParams();
-  const courseId = parseInt(id);
-  const course = courses.find(c => c.id === courseId);
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!course) {
+  useEffect(() => {
+    console.log('CourseDetail mounted with id:', id);
+    const fetchCourse = async () => {
+      try {
+        setLoading(true);
+        console.log('Fetching course with id:', id);
+        if (!id) {
+          console.error('No course ID provided');
+          setError('No course ID provided');
+          return;
+        }
+        const response = await courseService.getCourseById(id);
+        console.log('Course response:', response);
+        setCourse(response.data || response);
+      } catch (err) {
+        console.error('Error fetching course:', err);
+        setError('Course not found');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchCourse();
+    } else {
+      console.error('No ID parameter in route');
+      setError('Invalid course URL');
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-[#F2F4F7]">
+        <ClipLoader color="#07A698" size={50} />
+      </div>
+    );
+  }
+
+  if (error || !course) {
     return <Navigate to="/404" replace />;
   }
 

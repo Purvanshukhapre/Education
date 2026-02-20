@@ -1,35 +1,49 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { Star, Clock, Users, Play } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { courses } from '../../data/courses';
+import { useNavigate } from 'react-router-dom';
 import Card from '../ui/Card';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
+import courseService from '../../services/courseService';
+import { ClipLoader } from 'react-spinners';
 
 const FeaturedCourses = () => {
-  const featuredCourses = courses.filter(course => course.isFeatured);
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2
+  const [featuredCourses, setFeaturedCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const fetchFeaturedCourses = async () => {
+      try {
+        setLoading(true);
+        // Get top-rated courses as featured courses
+        const response = await courseService.getTopRatedCourses(6);
+        console.log('Top rated courses response:', response);
+        const coursesData = response.courses || response.data || response || [];
+        console.log('Courses data:', coursesData);
+        console.log('First course example:', coursesData[0]);
+        setFeaturedCourses(coursesData);
+      } catch (err) {
+        console.error('Error fetching featured courses:', err);
+        setError('Failed to load featured courses');
+        // Fallback to getting all courses and taking first 6
+        try {
+          const allCoursesResponse = await courseService.getAllCourses({ limit: 6 });
+          setFeaturedCourses(allCoursesResponse.courses || allCoursesResponse.data || allCoursesResponse || []);
+        } catch (fallbackErr) {
+          console.error('Error fetching fallback courses:', fallbackErr);
+          setError('Failed to load courses');
+        }
+      } finally {
+        setLoading(false);
       }
-    }
-  };
+    };
+    
+    fetchFeaturedCourses();
+  }, []);
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5
-      }
-    }
-  };
+
 
   const renderStars = (rating) => {
     return (
@@ -68,88 +82,116 @@ const FeaturedCourses = () => {
           </p>
         </div>
 
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-        >
-          {featuredCourses.map((course) => (
-            <motion.div key={course.id} variants={itemVariants}>
-              <Card className="h-full flex flex-col">
-                {/* Course Image */}
-                <div className="relative">
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <Badge variant="primary">
-                      {course.category}
-                    </Badge>
-                  </div>
-                  <div className="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg">
-                    <Play className="w-5 h-5 text-primary" />
-                  </div>
-                </div>
-
-                {/* Course Content */}
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="secondary" size="sm">
-                      {course.level}
-                    </Badge>
-                    <span className="text-accent font-bold">
-                      ${course.price}
-                      {course.originalPrice && (
-                        <span className="text-text-muted line-through text-sm ml-1">
-                          ${course.originalPrice}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xl font-bold text-text-primary mb-2 line-clamp-2">
-                    {course.title}
-                  </h3>
-
-                  <p className="text-text-secondary text-sm mb-4 flex-1">
-                    {course.description}
-                  </p>
-
-                  <div className="flex items-center justify-between text-sm text-text-secondary mb-4">
-                    <div className="flex items-center">
-                      <Users className="w-4 h-4 mr-1" />
-                      <span>{course.students.toLocaleString()} students</span>
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <ClipLoader color="#07A698" size={50} />
+          </div>
+        ) : error ? (
+          <div className="text-center py-20 text-text-secondary">
+            <p>{error}</p>
+          </div>
+        ) : (
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {featuredCourses.map((course) => (
+              <div key={course._id || course.id}>
+                <Card className="h-full flex flex-col">
+                  {/* Course Image */}
+                  <div className="relative">
+                    <img
+                      src={course.thumbnail || course.image}
+                      alt={course.title}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDQwMCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjUwIiBmaWxsPSIjRjJGNEY3Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTI1IiBmb250LXNpemU9IjE4IiBmb250LWZhbWlseT0iSGVsdmV0aWNhLCBBcmlhbCwgc2Fucy1zZXJpZiIgZmlsbD0iIzZDNzE2RiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Q291cnNlIEltYWdlPC90ZXh0Pgo8L3N2Zz4K';
+                      }}
+                    />
+                    <div className="absolute top-4 left-4">
+                      <Badge variant="primary">
+                        {course.category}
+                      </Badge>
                     </div>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      <span>{course.duration}</span>
+                    <div className="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg">
+                      <Play className="w-5 h-5 text-primary" />
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    {renderStars(course.rating)}
-                    <Link to={`/courses/${course.id}`}>
-                      <Button size="sm" variant="outline">
+                  {/* Course Content */}
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant="secondary" size="sm">
+                        {course.experienceLevel || course.level}
+                      </Badge>
+                      <span className="text-accent font-bold">
+                        ${course.price || 0}
+                        {course.originalPrice && (
+                          <span className="text-text-muted line-through text-sm ml-1">
+                            ${course.originalPrice}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-bold text-text-primary mb-2 line-clamp-2">
+                      {course.title}
+                    </h3>
+
+                    <p className="text-text-secondary text-sm mb-4 flex-1">
+                      {course.shortDescription || course.description}
+                    </p>
+
+                    <div className="flex items-center justify-between text-sm text-text-secondary mb-4">
+                      <div className="flex items-center">
+                        <Users className="w-4 h-4 mr-1" />
+                        <span>{(course.enrollmentCount || course.students || 0).toLocaleString()} students</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        <span>{course.duration || 'N/A'}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      {renderStars(course.averageRating || course.rating || 0)}
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Button clicked');
+                          console.log('Course object:', course);
+                          console.log('Course ID:', course._id || course.id);
+                          const courseId = course._id || course.id;
+                          if (courseId) {
+                            console.log('Navigating to:', `/courses/${courseId}`);
+                            // Force navigation with window.location for testing
+                            console.log('Force navigating with window.location');
+                            window.location.href = `/courses/${courseId}`;
+                          } else {
+                            console.error('No course ID found');
+                          }
+                        }}
+                      >
                         View Details
                       </Button>
-                    </Link>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
+                </Card>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="text-center mt-12">
-          <Link to="/courses">
-          <Button size="lg">
+          <Button 
+            size="lg"
+            onClick={() => navigate('/courses')}
+          >
             Browse All Courses
           </Button>
-        </Link>
         </div>
       </div>
     </section>

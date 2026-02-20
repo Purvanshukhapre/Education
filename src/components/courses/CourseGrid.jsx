@@ -1,17 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { courses } from '../../data/courses';
 import CourseCard from './CourseCard';
+import courseService from '../../services/courseService';
+import { ClipLoader } from 'react-spinners';
 
 const CourseGrid = ({ filters }) => {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { category, level, priceRange } = filters;
 
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const params = {};
+        
+        if (category && category !== 'All Categories') {
+          params.category = category;
+        }
+        if (level && level !== 'All Levels') {
+          params.experienceLevel = level;
+        }
+        
+        const response = await courseService.getAllCourses(params);
+        setCourses(response.data || []);
+      } catch (err) {
+        setError('Failed to load courses');
+        console.error('Error fetching courses:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, [category, level]);
+
   const filteredCourses = courses.filter(course => {
-    const categoryMatch = category === 'All Categories' || course.category === category;
-    const levelMatch = level === 'All Levels' || course.level === level;
-    const priceMatch = course.price <= priceRange[1];
-    
-    return categoryMatch && levelMatch && priceMatch;
+    const priceMatch = !priceRange || course.price <= priceRange[1];
+    return priceMatch;
   });
 
   const containerVariants = {
@@ -23,6 +50,22 @@ const CourseGrid = ({ filters }) => {
       }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <ClipLoader color="#07A698" size={50} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-20 text-red-500">
+        <p className="text-xl">{error}</p>
+      </div>
+    );
+  }
 
   if (filteredCourses.length === 0) {
     return (
@@ -46,7 +89,7 @@ const CourseGrid = ({ filters }) => {
       animate="visible"
     >
       {filteredCourses.map((course, index) => (
-        <CourseCard key={course.id} course={course} index={index} />
+        <CourseCard key={course._id || course.id} course={course} index={index} />
       ))}
     </motion.div>
   );

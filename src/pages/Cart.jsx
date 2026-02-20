@@ -1,15 +1,57 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, ShoppingBag, ArrowRight, Minus, Plus } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, Minus, Plus, LogIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import PageHeader from '../components/layout/PageHeader';
 
 const Cart = () => {
     const { cartItems, removeFromCart, getCartTotal, clearCart } = useCart();
+    const { isAuthenticated } = useAuth();
     const subtotal = parseFloat(getCartTotal());
     const tax = subtotal * 0.05; // 5% tax
     const total = subtotal + tax;
+
+    // If user is not authenticated, show login prompt
+    if (!isAuthenticated) {
+        return (
+            <div className="bg-[#F2F4F7] min-h-screen font-outfit">
+                <PageHeader
+                    title="Shopping Cart"
+                    bgImage="https://images.unsplash.com/photo-1557821552-17105176677c?auto=format&fit=crop&q=80&w=2000"
+                />
+                <section className="py-24 px-4 text-center">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="max-w-md mx-auto bg-white p-12 rounded-[40px] shadow-sm border border-gray-100"
+                    >
+                        <div className="w-24 h-24 bg-[#F2F4F7] rounded-full flex items-center justify-center mx-auto mb-8 text-[#07A698]">
+                            <LogIn className="w-10 h-10" />
+                        </div>
+                        <h2 className="text-[28px] font-bold text-[#162726] mb-4">Please Login to View Cart</h2>
+                        <p className="text-[#6C706F] mb-10">You need to be logged in to access your shopping cart and make purchases.</p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link
+                                to="/login"
+                                className="bg-[#07A698] hover:bg-[#162726] text-white px-8 py-4 rounded-full font-bold text-[16px] transition-all duration-300 shadow-lg shadow-[#07A698]/20 inline-flex items-center gap-2 group justify-center"
+                            >
+                                <LogIn className="w-5 h-5" />
+                                Login
+                            </Link>
+                            <Link
+                                to="/signup"
+                                className="bg-white border-2 border-[#07A698] text-[#07A698] hover:bg-[#07A698] hover:text-white px-8 py-4 rounded-full font-bold text-[16px] transition-all duration-300 inline-flex items-center gap-2 group justify-center"
+                            >
+                                Sign Up
+                            </Link>
+                        </div>
+                    </motion.div>
+                </section>
+            </div>
+        );
+    }
 
     if (cartItems.length === 0) {
         return (

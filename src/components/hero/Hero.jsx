@@ -1,10 +1,30 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, ArrowRight } from "lucide-react";
 import heroLeft from "../../assets/hero/left-side.png";
 import heroRight from "../../assets/hero/right-side.png";
+import courseService from "../../services/courseService";
 
 const Hero = () => {
+  const [courseCount, setCourseCount] = useState(1350);
+
+  useEffect(() => {
+    const fetchCourseCount = async () => {
+      try {
+        const response = await courseService.getAllCourses({ limit: 1 });
+        if (response.data && response.data.length > 0) {
+          // Use the total count from pagination info if available
+          setCourseCount(response.data.length || 1350);
+        }
+      } catch (err) {
+        console.error('Error fetching course count:', err);
+        // Keep default count if API fails
+      }
+    };
+
+    fetchCourseCount();
+  }, []);
+
   return (
     <section className="relative min-h-[100vh] flex items-center overflow-hidden bg-gradient-to-r from-slate-100 via-white to-teal-100">
 
@@ -105,7 +125,7 @@ const Hero = () => {
         >
           Explore{" "}
           <span className="text-teal-500">
-            1350+
+            {courseCount}+
           </span>{" "}
           Courses within Subject
         </motion.p>

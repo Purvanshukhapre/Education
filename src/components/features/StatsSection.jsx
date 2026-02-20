@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import adminService from '../../services/adminService';
+import { ClipLoader } from 'react-spinners';
 
 const StatsSection = () => {
-  const stats = [
+  const [stats, setStats] = useState([
     {
       number: '19.5',
       suffix: 'K',
@@ -23,7 +25,71 @@ const StatsSection = () => {
       suffix: '+',
       label: 'Top Instructors'
     }
-  ];
+  ]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const response = await adminService.getDashboardStats();
+        
+        // Transform API response to match stats format
+        if (response.stats) {
+          const apiStats = [
+            {
+              number: (response.stats.totalUsers / 1000).toFixed(1),
+              suffix: 'K',
+              label: 'Students Enrolled'
+            },
+            {
+              number: (response.stats.totalCourses / 1000).toFixed(1),
+              suffix: 'K',
+              label: 'Courses Completed'
+            },
+            {
+              number: response.stats.averageRating ? (response.stats.averageRating * 20).toFixed(0) : '96',
+              suffix: '%',
+              label: 'Satisfaction Rate'
+            },
+            {
+              number: response.stats.totalInstructors || '325',
+              suffix: '+',
+              label: 'Top Instructors'
+            }
+          ];
+          setStats(apiStats);
+        }
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+        // Check if it's a 401/403 error (unauthorized/forbidden) - means user doesn't have admin access
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          // Use default stats for non-admin users
+          // Keep default stats as fallback
+          console.log('Using default stats for non-admin user');
+        } else {
+          // For other errors, keep default stats
+          console.warn('Using default stats due to error');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-24 bg-[#F2F4F7]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex justify-center items-center h-32">
+            <ClipLoader color="#07A698" size={40} />
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-24 bg-[#F2F4F7]">

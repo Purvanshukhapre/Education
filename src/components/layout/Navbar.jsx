@@ -3,20 +3,16 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Search, ShoppingCart, User as UserIcon, LogOut } from 'lucide-react';
 import Container from './Container';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const { cartCount } = useCart();
   const location = useLocation();
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem('Patil Institute_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-  }, [location.pathname]);
+  // No need for useEffect since useAuth handles user state
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -35,8 +31,10 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isActive = (path) => location.pathname === path;
-  const isHomePage = location.pathname === '/';
+  const isActive = (path) => {
+    if (!location || !location.pathname) return false;
+    return location.pathname === path;
+  };
 
   return (
     <nav className={`sticky top-0 w-full z-50 transition-all duration-300 ${isScrolled
@@ -83,12 +81,20 @@ const Navbar = () => {
             </Link>
 
             {user ? (
-              <div className="flex items-center gap-3 bg-[#F2F4F7] py-2 px-4 rounded-full border border-gray-100">
+              <div className="flex items-center gap-2 bg-[#F2F4F7] py-2 px-4 rounded-full border border-gray-100">
                 <UserIcon className="w-5 h-5 text-primary" />
-                <span className="text-[14px] font-bold text-[#162726]">{user.name.split(' ')[0]}</span>
+                <span className="text-[14px] font-bold text-[#162726]">{user.fullName ? user.fullName.split(' ')[0] : 'User'}</span>
+                <Link 
+                  to="/profile" 
+                  className="p-1 text-slate-400 hover:text-primary transition-colors"
+                  title="Profile"
+                >
+                  <UserIcon className="w-4 h-4" />
+                </Link>
                 <button
-                  onClick={() => { localStorage.removeItem('Patil Institute_user'); setUser(null); }}
+                  onClick={logout}
                   className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                  title="Logout"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -154,17 +160,26 @@ const Navbar = () => {
                 </Link>
 
                 {user ? (
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                    <div className="flex items-center gap-3 text-[#162726] font-bold">
-                      <UserIcon className="w-5 h-5 text-[#07A698]" />
-                      {user.name}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                      <div className="flex items-center gap-3 text-[#162726] font-bold">
+                        <UserIcon className="w-5 h-5 text-[#07A698]" />
+                        {user.fullName || user.name || 'User'}
+                      </div>
+                      <button
+                        onClick={() => { logout(); setIsMenuOpen(false); }}
+                        className="text-red-500 font-bold text-[14px]"
+                      >
+                        Logout
+                      </button>
                     </div>
-                    <button
-                      onClick={() => { localStorage.removeItem('Patil Institute_user'); setUser(null); setIsMenuOpen(false); }}
-                      className="text-red-500 font-bold text-[14px]"
+                    <Link
+                      to="/profile"
+                      className="block p-4 bg-gray-50 rounded-2xl text-[#162726] font-bold text-center hover:bg-primary/10 transition-all"
+                      onClick={() => setIsMenuOpen(false)}
                     >
-                      Logout
-                    </button>
+                      Profile
+                    </Link>
                   </div>
                 ) : (
                   <Link
