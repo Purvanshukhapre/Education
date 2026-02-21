@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Eye, BookOpen, User, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { ClipLoader } from 'react-spinners';
 import enrollmentService from '../../services/enrollmentService';
@@ -15,11 +15,7 @@ const EnrollmentsManagement = () => {
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    fetchEnrollments();
-  }, [currentPage]);
-
-  const fetchEnrollments = async () => {
+  const fetchEnrollments = useCallback(async () => {
     try {
       setLoading(true);
       const response = await enrollmentService.getAllEnrollments({
@@ -38,7 +34,11 @@ const EnrollmentsManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    fetchEnrollments();
+  }, [fetchEnrollments]);
 
   const filteredEnrollments = enrollments.filter(enrollment =>
     enrollment.user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||

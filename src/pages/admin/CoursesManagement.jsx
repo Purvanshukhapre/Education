@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Edit, Trash2, Eye, BookOpen, Star, DollarSign, X } from 'lucide-react';
 import { ClipLoader } from 'react-spinners';
 import courseService from '../../services/courseService';
@@ -28,11 +28,7 @@ const CoursesManagement = () => {
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    fetchCourses();
-  }, [currentPage]);
-
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       setLoading(true);
       const response = await courseService.getAllCourses({
@@ -51,8 +47,12 @@ const CoursesManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage]);
 
+  useEffect(() => {
+    fetchCourses();
+  }, [currentPage, fetchCourses]);
+  
   const handleDeleteCourse = async (courseId) => {
     if (!window.confirm('Are you sure you want to delete this course?')) {
       return;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Star, ThumbsUp, Send, CheckCircle, Filter, Search } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
@@ -27,11 +27,7 @@ const FeedbackPage = () => {
 
   const { isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    fetchData();
-  }, [courseId, filters, searchTerm]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -56,7 +52,11 @@ const FeedbackPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleStarClick = (rating) => {
     setFeedback({ ...feedback, rating });

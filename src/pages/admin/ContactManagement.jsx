@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Eye, Mail, Phone, Edit, Trash2, Check, X } from 'lucide-react';
 import { ClipLoader } from 'react-spinners';
 import contactService from '../../services/contactService';
@@ -15,11 +15,7 @@ const ContactManagement = () => {
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    fetchContacts();
-  }, [currentPage]);
-
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     try {
       setLoading(true);
       const response = await contactService.getAllContacts({
@@ -38,7 +34,11 @@ const ContactManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    fetchContacts();
+  }, [fetchContacts]);
 
   const handleToggleRead = async (contactId) => {
     try {

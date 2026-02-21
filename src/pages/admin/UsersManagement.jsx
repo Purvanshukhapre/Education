@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, UserPlus, Edit, Trash2, Eye, Check, X } from 'lucide-react';
 import { ClipLoader } from 'react-spinners';
 import userService from '../../services/userService';
@@ -15,11 +15,7 @@ const UsersManagement = () => {
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    fetchUsers();
-  }, [currentPage]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const response = await userService.getAllUsers({
@@ -38,7 +34,11 @@ const UsersManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleToggleActive = async (userId) => {
     try {

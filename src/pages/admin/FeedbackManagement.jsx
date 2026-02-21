@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Eye, Star, Edit, Trash2, MessageSquare, User } from 'lucide-react';
 import { ClipLoader } from 'react-spinners';
 import feedbackService from '../../services/feedbackService';
@@ -15,11 +15,7 @@ const FeedbackManagement = () => {
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    fetchFeedbacks();
-  }, [currentPage]);
-
-  const fetchFeedbacks = async () => {
+  const fetchFeedbacks = useCallback(async () => {
     try {
       setLoading(true);
       const response = await feedbackService.getAllFeedback({
@@ -38,7 +34,11 @@ const FeedbackManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    fetchFeedbacks();
+  }, [fetchFeedbacks]);
 
   const handleDeleteFeedback = async (feedbackId) => {
     if (!window.confirm('Are you sure you want to delete this feedback?')) {
