@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Clock, Users, Play } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Card from '../ui/Card';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
@@ -95,8 +95,12 @@ const FeaturedCourses = () => {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
             {featuredCourses.map((course) => (
-              <div key={course._id || course.id}>
-                <Card className="h-full flex flex-col">
+              <Link 
+                key={course._id || course.id}
+                to={`/courses/${course._id || course.id}`}
+                className="block"
+              >
+                <Card className="h-full flex flex-col hover:shadow-xl transition-shadow cursor-pointer">
                   {/* Course Image */}
                   <div className="relative">
                     <img
@@ -135,41 +139,41 @@ const FeaturedCourses = () => {
                     </div>
 
                     <h3 className="text-xl font-bold text-text-primary mb-2 line-clamp-2">
-                      {course.title}
+                      <span className="pointer-events-none">
+                        {course.title}
+                      </span>
                     </h3>
 
                     <p className="text-text-secondary text-sm mb-4 flex-1">
-                      {course.shortDescription || course.description}
+                      <span className="pointer-events-none">
+                        {course.shortDescription || course.description}
+                      </span>
                     </p>
 
                     <div className="flex items-center justify-between text-sm text-text-secondary mb-4">
                       <div className="flex items-center">
                         <Users className="w-4 h-4 mr-1" />
-                        <span>{(course.enrollmentCount || course.students || 0).toLocaleString()} students</span>
+                        <span className="pointer-events-none">{(course.enrollmentCount || course.students || 0).toLocaleString()} students</span>
                       </div>
                       <div className="flex items-center">
                         <Clock className="w-4 h-4 mr-1" />
-                        <span>{course.duration || 'N/A'}</span>
+                        <span className="pointer-events-none">{course.duration || 'N/A'}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      {renderStars(course.averageRating || course.rating || 0)}
+                      <span className="pointer-events-none">
+                        {renderStars(course.averageRating || course.rating || 0)}
+                      </span>
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          console.log('Button clicked');
-                          console.log('Course object:', course);
-                          console.log('Course ID:', course._id || course.id);
                           const courseId = course._id || course.id;
                           if (courseId) {
-                            console.log('Navigating to:', `/courses/${courseId}`);
-                            // Force navigation with window.location for testing
-                            console.log('Force navigating with window.location');
-                            window.location.href = `/courses/${courseId}`;
+                            navigate(`/courses/${courseId}`);
                           } else {
                             console.error('No course ID found');
                           }
@@ -180,7 +184,7 @@ const FeaturedCourses = () => {
                     </div>
                   </div>
                 </Card>
-              </div>
+              </Link>
             ))}
           </div>
         )}

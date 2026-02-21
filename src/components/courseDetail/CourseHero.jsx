@@ -86,9 +86,9 @@ const CourseHero = ({ course }) => {
         </div>
       </div>
 
-      <div className="relative rounded-[24px] overflow-hidden group">
+      <motion.div className="relative rounded-[24px] overflow-hidden group">
         <img
-          src={course.image || "/placeholder-image.jpg"}
+          src={course.image || course.thumbnail || course.imageUrl || "/placeholder-image.jpg"}
           alt={course.title || "Course Image"}
           className="w-full h-[400px] object-cover transform group-hover:scale-105 transition-transform duration-700"
         />
@@ -97,7 +97,7 @@ const CourseHero = ({ course }) => {
             <Play className="w-10 h-10 text-[#07A698] fill-current ml-1" />
           </button>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 };

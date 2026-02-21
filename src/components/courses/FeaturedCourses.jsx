@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Star, FileText, Users, ArrowRight, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import courseService from '../../services/courseService';
 import { ClipLoader } from 'react-spinners';
 
@@ -98,52 +99,57 @@ const FeaturedCourses = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {courses.map((course) => (
-            <div
+            <Link
               key={course._id || course.id}
-              className="bg-[#191A1F] rounded-2xl overflow-hidden group hover:-translate-y-2 transition-transform duration-300"
+              to={`/courses/${course._id || course.id}`}
+              className="block"
             >
-              <div className="relative overflow-hidden">
-                <img
-                  src={course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=500&fit=crop'}
-                  alt={course.title}
-                  className="w-full h-56 object-cover transform group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute top-4 left-4 bg-teal-500 text-white px-3 py-1 rounded text-xs font-bold uppercase">
-                  {course.category}
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-4 text-slate-400 text-sm">
-                  <div className="flex items-center"><FileText className="w-4 h-4 mr-1" /> {course.courseCurriculum?.length || 0} Modules</div>
-                  <div className="flex items-center"><Users className="w-4 h-4 mr-1" /> {course.students || 0} Students</div>
+              <div className="bg-[#191A1F] rounded-2xl overflow-hidden group hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col">
+                <div className="relative overflow-hidden h-48">
+                  <img
+                    src={course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=500&fit=crop'}
+                    alt={course.title}
+                    className="w-full h-56 object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute top-4 left-4 bg-teal-500 text-white px-3 py-1 rounded text-xs font-bold uppercase">
+                    {course.category}
+                  </div>
                 </div>
 
-                <h3 className="text-xl font-bold text-white mb-4 line-clamp-2 hover:text-teal-400 transition-colors cursor-pointer">
-                  {course.title}
-                </h3>
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="flex justify-between items-center mb-4 text-slate-400 text-sm">
+                    <div className="flex items-center"><FileText className="w-4 h-4 mr-1" /> {course.courseCurriculum?.length || 0} Modules</div>
+                    <div className="flex items-center"><Users className="w-4 h-4 mr-1" /> {course.students || 0} Students</div>
+                  </div>
 
-                <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-700">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-semibold">
-                      {course.instructor?.charAt(0) || 'I'}
+
+                  <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-700 mt-auto">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-semibold">
+                        {course.instructor?.charAt(0) || 'I'}
+                      </div>
+                      <div>
+                        {/* <h4 className="text-white text-sm font-semibold">{course.instructor || 'Instructor'}</h4> */}
+                        <h3 className="text-xl font-bold text-white line-clamp-2 hover:text-teal-400 transition-colors cursor-pointer">
+                          <span className="pointer-events-none">
+                            {course.title}
+                          </span>
+                        </h3>
+                        <p className="text-slate-400 text-xs">Course Instructor</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-white text-sm font-semibold">{course.instructor || 'Instructor'}</h4>
-                      <p className="text-slate-400 text-xs">Course Instructor</p>
+                    {renderStars(course.rating || 0)}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-white font-bold text-lg">${course.price || 0}</span>
+                    <div className="text-white font-semibold hover:text-teal-400 transition-colors flex items-center pointer-events-none">
+                      View Details <ArrowRight className="w-4 h-4 ml-2" />
                     </div>
                   </div>
-                  {renderStars(course.rating || 0)}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-white font-bold text-lg">${course.price || 0}</span>
-                  <button className="text-white font-semibold hover:text-teal-400 transition-colors flex items-center">
-                    View Details <ArrowRight className="w-4 h-4 ml-2" />
-                  </button>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
